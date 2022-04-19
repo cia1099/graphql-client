@@ -1,5 +1,14 @@
+import 'dart:async';
+
+import 'package:client/screens/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
+
+enum Status {
+  loading,
+  success,
+  failure,
+}
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -9,6 +18,36 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  final link = HttpLink("https://app-gql-test.herokuapp.com/graphql");
+  late GraphQLClient client;
+  late GraphQLCache _inMemoryCache;
+  late StreamController<Status> _streamController;
+  late List<Map<String, dynamic>> _listData;
+
+  @override
+  void initState() {
+    _inMemoryCache = GraphQLCache();
+    client = GraphQLClient(
+        link: link,
+        cache: _inMemoryCache,
+        defaultPolicies: DefaultPolicies(
+          watchQuery: Policies(fetch: FetchPolicy.noCache),
+          query: Policies(fetch: FetchPolicy.noCache),
+          mutate: Policies(fetch: FetchPolicy.noCache),
+        ));
+    _listData = [];
+    _streamController = StreamController<Status>();
+    WidgetsBinding.instance!.addPostFrameCallback((_) => _fetchUsers());
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _streamController.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,53 +55,61 @@ class _MainPageState extends State<MainPage> {
         title: const Text("ClientGQLApp"),
       ),
       backgroundColor: Theme.of(context).backgroundColor,
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchUsers(),
+      body: StreamBuilder(
+        stream: _streamController.stream,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator.adaptive(),
+          final status = snapshot.data;
+          if (status != Status.success) {
+            return Center(
+              child: status == Status.loading
+                  ? CircularProgressIndicator.adaptive()
+                  : Text("Fail to fetch users"),
             );
           }
-          final users = snapshot.data;
-          return users == null
-              ? Center(
-                  child: Text("Failure fetch users"),
-                )
-              : Container(
-                  margin: EdgeInsets.all(8.0),
-                  child: ListView.builder(
-                      itemCount: users.length,
-                      itemBuilder: (_, i) {
-                        final user = users[i];
-                        return Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user["name"],
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
-                                ),
-                                Text(
-                                  user["age"].toString(),
-                                  style: TextStyle(
-                                      color: Colors.grey, fontSize: 14),
-                                ),
-                                Text(
-                                  user["profession"],
-                                  style: TextStyle(
-                                      color: Colors.grey, fontSize: 14),
-                                ),
-                              ],
+          // if (snapshot.connectionState == ConnectionState.waiting) {
+          //   return Center(
+          //     child: CircularProgressIndicator.adaptive(),
+          //   );
+          // }
+          // final users = snapshot.data;
+          return
+              // users == null
+              //     ? Center(child: Text("Fail to fetch users")):
+              Container(
+            margin: EdgeInsets.all(8.0),
+            child: ListView.builder(
+                itemCount: _listData.length,
+                itemBuilder: (_, i) {
+                  final user = _listData[i];
+                  return GestureDetector(
+                    onTap: () => Navigator.of(context)
+                        .push(MaterialPageRoute(
+                          builder: (context) => ProfilePage(userId: user["id"]),
+                        ))
+                        .catchError((e) => print(e)),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user["name"],
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
                             ),
-                          ),
-                        );
-                      }),
-                );
+                            Text(
+                              user["profession"],
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -73,35 +120,52 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Future<List<Map<String, dynamic>>> _fetchUsers() async {
-    final _httpLink = HttpLink("https://app-gql-test.herokuapp.com/graphql");
-    final client = GraphQLClient(
-      link: _httpLink,
-      cache: GraphQLCache(),
-      // defaultPolicies:
-      //     DefaultPolicies(query: Policies(fetch: FetchPolicy.noCache))
-    );
+  Future<void> _fetchUsers() async {
+    _streamController.add(Status.loading);
     const readUsers = r"""
     query{
       users{
         name
-        age
         profession
+        id
       }
     }
     """;
     final query = QueryOptions(document: gql(readUsers));
-    return client
-        .query(query)
-        .then((result) => (result.data!["users"] as List<dynamic>)
-            .map((u) => {
-                  "age": u["age"],
-                  "name": u["name"],
-                  "profession": u["profession"]
-                })
-            .toList())
-        .catchError((err) {
-      print(err);
+    client.query(query).then((result) {
+      _listData.clear();
+      _listData.addAll((result.data!["users"] as List<dynamic>).map((u) =>
+          {"name": u["name"], "profession": u["profession"], "id": u["id"]}));
+      _streamController.add(Status.success);
+    }).catchError((err) {
+      _streamController.add(Status.failure);
+      debugPrint("$err");
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> _currencyUsers() async* {
+    const readUsers = r"""
+    query{
+      users{
+        name
+        profession
+        id
+      }
+    }
+    """;
+    final query = QueryOptions(document: gql(readUsers));
+    List<Map<String, dynamic>> susers = [];
+
+    client.query(query).then((result) async* {
+      final users = (result.data!["users"] as List<dynamic>).map((u) =>
+          {"name": u["name"], "profession": u["profession"], "id": u["id"]});
+      for (final user in users) {
+        print(user);
+        susers.add(user);
+        yield susers;
+      }
+    }).catchError((err) {
+      debugPrint("$err");
     });
   }
 }

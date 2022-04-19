@@ -43,7 +43,7 @@ class MyHomePage extends StatelessWidget {
                 child: SizedBox(
                   width: kIsWeb ? 400 : null,
                   height: minHeight.toDouble(),
-                  child: ProfilePage(userId: "sdadasdada"),
+                  child: MainPage(),
                 ),
               ),
             ),
@@ -53,7 +53,7 @@ class MyHomePage extends StatelessWidget {
             alignment: Alignment.center,
             child: SizedBox(
               width: kIsWeb ? 400 : null,
-              child: ProfilePage(userId: "sdadasdada"),
+              child: MainPage(),
             ),
           );
         }
