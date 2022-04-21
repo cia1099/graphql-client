@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:client/main.dart' show serverLink;
 import 'package:client/screens/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
@@ -18,7 +19,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final link = HttpLink("https://app-gql-test.herokuapp.com/graphql");
+  final link = HttpLink(serverLink);
   late GraphQLClient client;
   late GraphQLCache _inMemoryCache;
   late StreamController<Status> _streamController;
@@ -66,16 +67,7 @@ class _MainPageState extends State<MainPage> {
                   : Text("Fail to fetch users"),
             );
           }
-          // if (snapshot.connectionState == ConnectionState.waiting) {
-          //   return Center(
-          //     child: CircularProgressIndicator.adaptive(),
-          //   );
-          // }
-          // final users = snapshot.data;
-          return
-              // users == null
-              //     ? Center(child: Text("Fail to fetch users")):
-              Container(
+          return Container(
             margin: EdgeInsets.all(8.0),
             child: ListView.builder(
                 itemCount: _listData.length,
@@ -84,8 +76,8 @@ class _MainPageState extends State<MainPage> {
                   return GestureDetector(
                     onTap: () => Navigator.of(context)
                         .push(MaterialPageRoute(
-                          builder: (context) => ProfilePage(userId: user["id"]),
-                        ))
+                            builder: (context) =>
+                                ProfilePage(userId: user["id"])))
                         .catchError((e) => print(e)),
                     child: Card(
                       child: Padding(

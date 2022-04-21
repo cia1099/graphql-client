@@ -1,8 +1,8 @@
 import 'package:client/screens/main_page.dart';
-import 'package:client/screens/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+const serverLink = "https://app-gql-test.herokuapp.com/graphql";
 void main() {
   runApp(const MyApp());
 }
