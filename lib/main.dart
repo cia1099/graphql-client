@@ -1,3 +1,4 @@
+import 'package:client/screens/form_profile.dart';
 import 'package:client/screens/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -43,7 +44,7 @@ class MyHomePage extends StatelessWidget {
                 child: SizedBox(
                   width: kIsWeb ? 400 : null,
                   height: minHeight.toDouble(),
-                  child: MainPage(),
+                  child: FormProfile(),
                 ),
               ),
             ),
@@ -53,7 +54,7 @@ class MyHomePage extends StatelessWidget {
             alignment: Alignment.center,
             child: SizedBox(
               width: kIsWeb ? 400 : null,
-              child: MainPage(),
+              child: FormProfile(),
             ),
           );
         }
