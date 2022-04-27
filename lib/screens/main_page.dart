@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:client/main.dart' show serverLink;
+import 'package:client/screens/form_profile.dart';
 import 'package:client/screens/profile_page.dart';
+import 'package:client/utili/web_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
 
@@ -74,11 +76,15 @@ class _MainPageState extends State<MainPage> {
                 itemBuilder: (_, i) {
                   final user = _listData[i];
                   return GestureDetector(
-                    onTap: () => Navigator.of(context)
-                        .push(MaterialPageRoute(
-                            builder: (context) =>
-                                ProfilePage(userId: user["id"])))
-                        .catchError((e) => print(e)),
+                    onTap: () =>
+                        // Navigator.of(context)
+                        //     .push(MaterialPageRoute(
+                        //         builder: (context) =>
+                        //             ProfilePage(userId: user["id"])))
+                        LayoutNavigator.push(
+                                context: context,
+                                page: ProfilePage(userId: user["id"]))
+                            .catchError((e) => print(e)),
                     child: Card(
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
@@ -99,6 +105,14 @@ class _MainPageState extends State<MainPage> {
                         ),
                       ),
                     ),
+                    onLongPress: () => LayoutNavigator.push(
+                        context: context,
+                        page: FormProfile(
+                          id: user["id"],
+                          name: user["name"],
+                          age: user["age"],
+                          profession: user["profession"],
+                        )),
                   );
                 }),
           );
@@ -107,7 +121,8 @@ class _MainPageState extends State<MainPage> {
       floatingActionButton: FloatingActionButton(
         tooltip: "add",
         child: const Icon(Icons.add),
-        onPressed: () {},
+        onPressed: () =>
+            LayoutNavigator.push(context: context, page: FormProfile()),
       ),
     );
   }
@@ -120,14 +135,19 @@ class _MainPageState extends State<MainPage> {
         name
         profession
         id
+        age
       }
     }
     """;
     final query = QueryOptions(document: gql(readUsers));
     client.query(query).then((result) {
       _listData.clear();
-      _listData.addAll((result.data!["users"] as List<dynamic>).map((u) =>
-          {"name": u["name"], "profession": u["profession"], "id": u["id"]}));
+      _listData.addAll((result.data!["users"] as List<dynamic>).map((u) => {
+            "name": u["name"],
+            "profession": u["profession"],
+            "id": u["id"],
+            "age": u["age"],
+          }));
       _streamController.add(Status.success);
     }).catchError((err) {
       _streamController.add(Status.failure);

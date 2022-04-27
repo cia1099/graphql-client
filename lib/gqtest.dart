@@ -48,8 +48,8 @@ void main() {
   // }).catchError((err) => print(err));
 
   const queryUser = r"""
-  query ($id: ID!){
-    user(id: $id){
+  query ($userId: ID!){
+    user(id: $userId){
       age
       name
       profession
@@ -64,7 +64,9 @@ void main() {
     }
   }
   """;
-  final qq = QueryOptions(document: gql(queryUser), variables: {"id": queryID});
+  final qq = QueryOptions(
+      document: gql(queryUser),
+      variables: {"userId": queryID, "shit": "55123"});
   client.query(qq).then((result) {
     final user = result.data!["user"];
     print("We investigate a user:");
@@ -78,7 +80,8 @@ void main() {
   }).catchError((onError) => print(onError.toString()));
 
   final qq2 = QueryOptions(
-      document: gql(queryUser), variables: {"id": "UKtPZwUXVjhMbIjRD2PD"});
+      document: gql(queryUser),
+      variables: {"userId": "UKtPZwUXVjhMbIjRD2PD", "fuck": 123456});
   client.query(qq2).then((result) {
     final user = result.data!["user"];
     print("We investigate another user:");

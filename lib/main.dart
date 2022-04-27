@@ -1,9 +1,14 @@
 import 'package:client/screens/form_profile.dart';
 import 'package:client/screens/main_page.dart';
+import 'package:client/utili/web_navigator.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 const serverLink = "https://app-gql-test.herokuapp.com/graphql";
+/**
+ * support web for http request
+ * https://stackoverflow.com/questions/65630743/how-to-solve-flutter-web-api-cors-error-only-with-dart-code
+ * https://blog.bal.al/how-to-fix-cors-error-for-your-flutter-web-app
+ */
 void main() {
   runApp(const MyApp());
 }
@@ -19,46 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
           primarySwatch: Colors.blue, backgroundColor: Color(0xFF008888)),
       debugShowCheckedModeBanner: false,
-      home: const MyHomePage(),
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final _verticalController = ScrollController();
-    const minHeight = 500;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.minHeight < minHeight) {
-          return Scrollbar(
-            controller: _verticalController,
-            child: SingleChildScrollView(
-              controller: _verticalController,
-              scrollDirection: Axis.vertical,
-              child: Container(
-                alignment: Alignment.center,
-                child: SizedBox(
-                  width: kIsWeb ? 400 : null,
-                  height: minHeight.toDouble(),
-                  child: FormProfile(),
-                ),
-              ),
-            ),
-          );
-        } else {
-          return Container(
-            alignment: Alignment.center,
-            child: SizedBox(
-              width: kIsWeb ? 400 : null,
-              child: FormProfile(),
-            ),
-          );
-        }
-      },
+      home: LayoutNavigator.buildPage(context, MainPage()),
     );
   }
 }
