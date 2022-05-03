@@ -6,6 +6,7 @@ import 'package:client/screens/profile_page.dart';
 import 'package:client/utili/web_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 enum Status {
   loading,
@@ -76,32 +77,68 @@ class _MainPageState extends State<MainPage> {
                 itemBuilder: (_, i) {
                   final user = _listData[i];
                   return GestureDetector(
-                    onTap: () =>
-                        // Navigator.of(context)
-                        //     .push(MaterialPageRoute(
-                        //         builder: (context) =>
-                        //             ProfilePage(userId: user["id"])))
-                        LayoutNavigator.push(
-                                context: context,
-                                page: ProfilePage(userId: user["id"]))
-                            .catchError((e) => print(e)),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user["name"],
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16),
+                    onTap: () => LayoutNavigator.push(
+                            context: context,
+                            page: ProfilePage(userId: user["id"]))
+                        .catchError((e) => print(e)),
+                    child: Slidable(
+                      endActionPane: ActionPane(
+                        motion: const BehindMotion(),
+                        children: [
+                          SlidableAction(
+                            backgroundColor: Color(0xFFFE4A49),
+                            foregroundColor: Colors.white,
+                            icon: Icons.delete,
+                            label: 'Delete',
+                            onPressed: (_) => showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text('Are you sure?'),
+                                content: Text(
+                                  'Do you want to remove the user?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    child: Text('No'),
+                                    onPressed: () {
+                                      Navigator.of(ctx).pop(false);
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: Text('Yes'),
+                                    onPressed: () {
+                                      _removeUser(user["id"]);
+                                      Navigator.of(ctx).pop(true);
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                            Text(
-                              user["profession"],
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user["name"],
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                                Text(
+                                  user["profession"],
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 14),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -122,7 +159,8 @@ class _MainPageState extends State<MainPage> {
         tooltip: "add",
         child: const Icon(Icons.add),
         onPressed: () =>
-            LayoutNavigator.push(context: context, page: FormProfile()),
+            LayoutNavigator.push(context: context, page: FormProfile())
+                .then((_) => _fetchUsers()),
       ),
     );
   }
@@ -179,5 +217,18 @@ class _MainPageState extends State<MainPage> {
     }).catchError((err) {
       debugPrint("$err");
     });
+  }
+
+  void _removeUser(String userId) {
+    const post = r"""
+    mutation ($id:ID!){
+      removeUser(id:$id){
+        id
+      }
+    }
+    """;
+    client
+        .mutate(MutationOptions(document: gql(post), variables: {"id": userId}))
+        .then((_) => _fetchUsers());
   }
 }

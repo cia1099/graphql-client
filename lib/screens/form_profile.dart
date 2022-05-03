@@ -49,6 +49,7 @@ class _FormProfileState extends State<FormProfile> {
 
   @override
   Widget build(BuildContext context) {
+    final userButtomText = _editUser["id"] == null ? "ADD" : "UPDATE";
     return Scaffold(
       appBar: AppBar(
         title: const Text("Form Profile"),
@@ -133,8 +134,8 @@ class _FormProfileState extends State<FormProfile> {
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                           primary: Colors.red[400]),
-                                      child: const Text(
-                                        "SAVE USER",
+                                      child: Text(
+                                        userButtomText + " USER",
                                         style: TextStyle(
                                             color: Colors.white, fontSize: 14),
                                       ),
