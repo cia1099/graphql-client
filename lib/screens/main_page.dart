@@ -149,7 +149,11 @@ class _MainPageState extends State<MainPage> {
                           name: user["name"],
                           age: user["age"],
                           profession: user["profession"],
-                        )),
+                        )).then((isSubmit) {
+                      if (isSubmit == true) {
+                        _fetchUsers();
+                      }
+                    }),
                   );
                 }),
           );

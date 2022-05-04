@@ -126,9 +126,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     """;
                                     _querySomething(content, "posts")
                                         .then((result) {
-                                      // result["time"] = DateFormat.yMMMMd(
-                                      //         DateTime.tryParse(result["time"]))
-                                      //     .toString();
+                                      result.forEach((obj) => obj.update(
+                                          "time",
+                                          (value) => DateFormat(
+                                                  'HH:mm - y/MM/dd')
+                                              .format(DateTime.parse(value))));
                                       attributes.value = result;
                                     });
                                     attributes.value = null;

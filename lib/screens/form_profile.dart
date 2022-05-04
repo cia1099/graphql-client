@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:client/main.dart' show serverLink;
 import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
@@ -23,7 +21,8 @@ class _FormProfileState extends State<FormProfile> {
   final link = HttpLink(serverLink);
   late GraphQLClient client;
   var _hasUser = HasUser.exiting;
-  var _postHobby = false;
+  bool? _isSubmit;
+  var _postLoading = false;
 
   @override
   void initState() {
@@ -53,6 +52,9 @@ class _FormProfileState extends State<FormProfile> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Form Profile"),
+        leading: BackButton(
+          onPressed: () => Navigator.of(context).pop(_isSubmit),
+        ),
       ),
       body: Scrollbar(
         child: CustomScrollView(
@@ -64,7 +66,7 @@ class _FormProfileState extends State<FormProfile> {
                   alignment: Alignment.center,
                   margin:
                       const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                  child: _postHobby
+                  child: _postLoading
                       ? const Center(
                           child: CircularProgressIndicator.adaptive(),
                         )
@@ -269,6 +271,7 @@ class _FormProfileState extends State<FormProfile> {
             ..update("age", (value) => int.parse(value))
             ..removeWhere((key, value) => value == null),
         ));
+        _isSubmit = true;
         setState(() {
           _editUser["id"] = result.data!["createUser"]["id"];
           _hasUser = HasUser.exiting;
@@ -295,6 +298,7 @@ class _FormProfileState extends State<FormProfile> {
           document: gql(post),
           variables: {..._editUser}..update("age", (value) => int.parse(value)),
         ));
+        _isSubmit = true;
         setState(() {
           _editUser["id"] = result.data!["updateUser"]["id"];
           _hasUser = HasUser.exiting;
@@ -313,26 +317,25 @@ class _FormProfileState extends State<FormProfile> {
       return;
     }
     _detailForm.currentState!.save();
-    // print(JsonEncoder.withIndent("\t").convert(_editUser)); //debug json
     const post = r"""
     mutation ($id:ID!,$comment:String,$title:String,$description:String){
-      createPost(userId:$id,comment:$comment){
-        time
-      }
       createHobby(userId:$id,title:$title,description:$description){
         user{
           name
         }
       }
+      createPost(userId:$id,comment:$comment){
+        comment
+      }
     }
     """;
     setState(() {
-      _postHobby = true;
+      _postLoading = true;
     });
     client
         .mutate(MutationOptions(document: gql(post), variables: _editUser))
         .then((result) => setState(() {
-              _postHobby = false;
+              _postLoading = false;
             }))
         .catchError((onError) {
       print(onError);
