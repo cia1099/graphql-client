@@ -197,32 +197,6 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  Stream<List<Map<String, dynamic>>> _currencyUsers() async* {
-    const readUsers = r"""
-    query{
-      users{
-        name
-        profession
-        id
-      }
-    }
-    """;
-    final query = QueryOptions(document: gql(readUsers));
-    List<Map<String, dynamic>> susers = [];
-
-    client.query(query).then((result) async* {
-      final users = (result.data!["users"] as List<dynamic>).map((u) =>
-          {"name": u["name"], "profession": u["profession"], "id": u["id"]});
-      for (final user in users) {
-        print(user);
-        susers.add(user);
-        yield susers;
-      }
-    }).catchError((err) {
-      debugPrint("$err");
-    });
-  }
-
   void _removeUser(String userId) {
     const post = r"""
     mutation ($id:ID!){

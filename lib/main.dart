@@ -1,14 +1,8 @@
-import 'package:client/screens/form_profile.dart';
 import 'package:client/screens/main_page.dart';
 import 'package:client/utili/web_navigator.dart';
 import 'package:flutter/material.dart';
 
 const serverLink = "https://app-gql-test.herokuapp.com/graphql";
-/**
- * support web for http request
- * https://stackoverflow.com/questions/65630743/how-to-solve-flutter-web-api-cors-error-only-with-dart-code
- * https://blog.bal.al/how-to-fix-cors-error-for-your-flutter-web-app
- */
 void main() {
   runApp(const MyApp());
 }
